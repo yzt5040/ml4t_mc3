@@ -84,7 +84,7 @@ class QLearner(object):
         if self.dyna != 0:
             self.Tc[prevState][prevAction][newState] = self.Tc[prevState][prevAction][newState] + 1
             self.R[prevState][prevAction] = (1.0 - self.alpha) * self.R[prevState][prevAction] + self.alpha * r
-
+            self.rar = self.rar * self.radr
             for i in range(0, self.num_states):            
                 self.T[prevState][action][i] = self.Tc[prevState][action][i] / sum(self.Tc[prevState][action][:])
             for i in range(0, self.dyna):

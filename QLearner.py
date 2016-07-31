@@ -47,7 +47,8 @@ class QLearner(object):
         @returns: The selected action
         """
         self.s = s
-        action = rand.randint(0, self.num_actions-1)
+        action = (np.int(rand.random()*1000000)) % self.num_actions
+        # action = rand.randint(0, self.num_actions-1)
         self.a = action
         if self.verbose: print "s =", s,"a =",action
         return action
@@ -64,12 +65,15 @@ class QLearner(object):
         newState = s_prime
         # decide what action to take in the new state
         if np.random.random() < self.rar: #Random exploration
-            action = rand.randint(0, self.num_actions - 1)
+            # action = rand.randint(0, self.num_actions - 1)
+            action = (np.int(rand.random()*1000)) % self.num_actions
         else: # Or choose the action best on Q table at current state
             possibleAction = self.Q[newState]
             maxQVal = np.max(possibleAction)
             allActions = np.where(possibleAction == maxQVal)
-            action = rand.choice(allActions[0])   
+            ind = (np.int(rand.random()*2000)) % allActions[0].shape[0]
+            # action = rand.choice(allActions[0])
+            action = allActions[0][ind]
         prevQ = self.Q[prevState][prevAction]
         newQ = self.Q[newState][action]
         # update the Q based on new state and new action made from prev state
@@ -84,14 +88,17 @@ class QLearner(object):
             for i in range(0, self.num_states):            
                 self.T[prevState][action][i] = self.Tc[prevState][action][i] / sum(self.Tc[prevState][action][:])
             for i in range(0, self.dyna):
-                s = rand.randint(0,self.num_states-1)
-                a = rand.randint(0, self.num_actions-1)
+                # s = rand.randint(0,self.num_states-1)
+                s = np.int(rand.random()*3000) % self.num_states
+                # a = rand.randint(0, self.num_actions-1)
+                a = np.int(rand.random()*4000) % self.num_actions
                 randValue = rand.random()
                 cumProb = 0.0
                 sp_temp = 0
                 #use cumulative probability to select the sp in hulacination (using random generated sp is not a good idea, it takes more time and steps to go to destination)
+                scaleCoef = 5
                 while cumProb <= randValue:
-                    cumProb += self.T[s][a][sp_temp]
+                    cumProb += self.T[s][a][sp_temp]*scaleCoef
                     sp = sp_temp
                     sp_temp = sp_temp + 1
                     
@@ -99,7 +106,8 @@ class QLearner(object):
                 tempPossibleAction = self.Q[sp]
                 tempMaxQVal = max(tempPossibleAction)
                 allActions = np.where(tempPossibleAction == tempMaxQVal)
-                newAction = rand.choice(allActions[0])
+                ind = (np.int(rand.random()*5000)) % allActions[0].shape[0]
+                newAction = allActions[0][ind]
                 self.Q[s][a] = (1.0 - self.alpha) * self.Q[s][a] + self.alpha * (rr + self.gamma * self.Q[sp][newAction])
         # ===========================================    
         

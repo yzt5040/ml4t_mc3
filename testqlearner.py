@@ -135,8 +135,8 @@ if __name__=="__main__":
             if verbose: time.sleep(1)
             steps += 1
 
-        # print iteration, "," , steps
-    print iteration, "," , steps
+        print iteration, "," , steps
+    # print iteration, "," , steps
     printmap(data)
     elapsed = time.time() - t
     print 'time:',elapsed

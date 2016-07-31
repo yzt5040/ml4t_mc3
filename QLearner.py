@@ -36,7 +36,7 @@ class QLearner(object):
         # print np.shape(self.R)
         # print np.shape(self.Q)
         # Initialize the Tc
-        self.Tc = [[[0.000001 for i in xrange(self.num_states)] for j in xrange(self.num_actions)] for k in xrange(self.num_states)]
+        self.Tc = [[[0.000000001 for i in xrange(self.num_states)] for j in xrange(self.num_actions)] for k in xrange(self.num_states)]
         # print np.shape(self.T)
         # print np.shape(self.Tc)
         
@@ -47,7 +47,7 @@ class QLearner(object):
         @returns: The selected action
         """
         self.s = s
-        action = (np.int(rand.random()*1000000)) % self.num_actions
+        action = (np.int(rand.random()*100)) % self.num_actions
         # action = rand.randint(0, self.num_actions-1)
         self.a = action
         if self.verbose: print "s =", s,"a =",action
@@ -64,34 +64,34 @@ class QLearner(object):
         prevAction = self.a
         newState = s_prime
         # decide what action to take in the new state
-        if np.random.random() < self.rar: #Random exploration
+        if rand.random() < self.rar: #Random exploration
             # action = rand.randint(0, self.num_actions - 1)
-            action = (np.int(rand.random()*1000)) % self.num_actions
+            action = (np.int(rand.random()*111)) % self.num_actions
         else: # Or choose the action best on Q table at current state
             possibleAction = self.Q[newState]
             maxQVal = np.max(possibleAction)
             allActions = np.where(possibleAction == maxQVal)
-            ind = (np.int(rand.random()*2000)) % allActions[0].shape[0]
+            ind = (np.int(rand.random()*222)) % allActions[0].shape[0]
             # action = rand.choice(allActions[0])
             action = allActions[0][ind]
-        prevQ = self.Q[prevState][prevAction]
-        newQ = self.Q[newState][action]
+        # prevQ = self.Q[prevState][prevAction]
+ #        newQ = self.Q[newState][action]
         # update the Q based on new state and new action made from prev state
-        self.Q[prevState][prevAction] = (1.0 - self.alpha) * prevQ + self.alpha * (self.gamma * newQ + r)
+        self.Q[prevState][prevAction] = (1.0 - self.alpha) * self.Q[prevState][prevAction] + self.alpha * (self.gamma * self.Q[newState][action] + r)
         retAction = action
 
         # Considering dyna halucilation process: ================
         if self.dyna != 0:
             self.Tc[prevState][prevAction][newState] = self.Tc[prevState][prevAction][newState] + 1
             self.R[prevState][prevAction] = (1.0 - self.alpha) * self.R[prevState][prevAction] + self.alpha * r
-            self.rar = self.rar * self.radr
+            self.rar = self.rar * self.radr * self.radr
             for i in range(0, self.num_states):            
                 self.T[prevState][action][i] = self.Tc[prevState][action][i] / sum(self.Tc[prevState][action][:])
             for i in range(0, self.dyna):
                 # s = rand.randint(0,self.num_states-1)
-                s = np.int(rand.random()*3000) % self.num_states
+                s = np.int(rand.random()*333) % self.num_states
                 # a = rand.randint(0, self.num_actions-1)
-                a = np.int(rand.random()*4000) % self.num_actions
+                a = np.int(rand.random()*444) % self.num_actions
                 randValue = rand.random()
                 cumProb = 0.0
                 sp_temp = 0
@@ -101,12 +101,11 @@ class QLearner(object):
                     cumProb += self.T[s][a][sp_temp]*scaleCoef
                     sp = sp_temp
                     sp_temp = sp_temp + 1
-                    
                 rr = self.R[s][a]
                 tempPossibleAction = self.Q[sp]
                 tempMaxQVal = max(tempPossibleAction)
                 allActions = np.where(tempPossibleAction == tempMaxQVal)
-                ind = (np.int(rand.random()*5000)) % allActions[0].shape[0]
+                ind = (np.int(rand.random()*555)) % allActions[0].shape[0]
                 newAction = allActions[0][ind]
                 self.Q[s][a] = (1.0 - self.alpha) * self.Q[s][a] + self.alpha * (rr + self.gamma * self.Q[sp][newAction])
         # ===========================================    

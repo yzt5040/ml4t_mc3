@@ -30,7 +30,7 @@ class QLearner(object):
         self.rar = rar
         self.radr = radr
         self.dyna = dyna
-        self.minDyna = 50
+        self.minDyna = 30
         # initialize the Q Table
         self.Q = np.zeros((self.num_states,self.num_actions),dtype=float)
         # initialize the R,T Table
@@ -50,12 +50,12 @@ class QLearner(object):
         @returns: The selected action
         """
         # print 'current count:',self.count
-        # Here I used a very smart adaptive method to update the dynaQ iteration, which shows a very good performance
+        # Here I used a very smart adaptive method to update the dynaQ iteration, which shows a very good performance and increases the speed and accuracy. Most importantly, it lowers the complexity when the Q is optimized during helucination
         if self.dyna != 0:
-            if (self.prevCount >= self.count * 0.9): # 0.9 coefficient is used to get rid of tiny performance variation, which may cause the increase of dyna value, and this is not desirable
+            if (self.prevCount >= self.count * 0.8): # 0.8 coefficient is used to get rid of tiny performance variation, which may cause the increase of dyna value, and this is not desirable
                 self.dyna = self.dyna - 10
             else:
-                self.dyna =self.dyna + 10
+                self.dyna =self.dyna + 3
             if self.dyna <= self.minDyna:
                 self.dyna = self.minDyna
             self.prevCount = self.count

@@ -29,7 +29,7 @@ class QLearner(object):
         self.Q = [[0.0 for x in action_list] for x in xrange(self.num_states)]
         self.R = [[0.0 for x in action_list] for x in xrange(self.num_states)]
 
-        self.Tc = [[[0.00000001 for k in xrange(self.num_states)] for j in xrange(self.num_actions)] for i in xrange(self.num_states)]
+        self.Tc = [[[0.0000000001 for k in xrange(self.num_states)] for j in xrange(self.num_actions)] for i in xrange(self.num_states)]
         self.T = [[[(1.0 / self.num_states) for k in xrange(self.num_states)] for j in xrange(self.num_actions)] for i in xrange(self.num_states)]
 
 
@@ -93,7 +93,7 @@ class QLearner(object):
             summy = 0.0
             t = 0
             while summy <= randy:
-                summy = summy + self.T[s][a][t]
+                summy = summy + self.T[s][a][t] * 5
                 s_primmy = t
                 t = t + 1
 

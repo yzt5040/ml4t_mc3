@@ -21,6 +21,8 @@ class QLearner(object):
         self.s = 0
         self.a = 0
         self.allActions = range(self.num_actions)
+        self.count = 0
+        self.prevCount = 0
         self.num_states = num_states
         self.num_actions = num_actions
         self.alpha = alpha
@@ -28,15 +30,16 @@ class QLearner(object):
         self.rar = rar
         self.radr = radr
         self.dyna = dyna
+        self.minDyna = 50
         # initialize the Q Table
         self.Q = np.zeros((self.num_states,self.num_actions),dtype=float)
         # initialize the R,T Table
-        self.R = np.zeros((self.num_states,self.num_actions),dtype=float)
+        self.R = [[0.0 for i in self.allActions] for i in xrange(self.num_states)]
         self.T = [[[(1.0 / self.num_states) for i in xrange(self.num_states)] for j in xrange(self.num_actions)] for k in xrange(self.num_states)]
         # print np.shape(self.R)
         # print np.shape(self.Q)
         # Initialize the Tc
-        self.Tc = [[[0.000000001 for i in xrange(self.num_states)] for j in xrange(self.num_actions)] for k in xrange(self.num_states)]
+        self.Tc = [[[0.0000000001 for i in xrange(self.num_states)] for j in xrange(self.num_actions)] for k in xrange(self.num_states)]
         # print np.shape(self.T)
         # print np.shape(self.Tc)
         
@@ -46,6 +49,17 @@ class QLearner(object):
         @param s: The new state
         @returns: The selected action
         """
+        # print 'current count:',self.count
+        # Here I used a very smart adaptive method to update the dynaQ iteration, which shows a very good performance
+        if self.dyna != 0:
+            if (self.prevCount >= self.count * 0.9): # 0.9 coefficient is used to get rid of tiny performance variation, which may cause the increase of dyna value, and this is not desirable
+                self.dyna = self.dyna - 10
+            else:
+                self.dyna =self.dyna + 10
+            if self.dyna <= self.minDyna:
+                self.dyna = self.minDyna
+            self.prevCount = self.count
+            self.count = 0
         self.s = s
         action = (np.int(rand.random()*100)) % self.num_actions
         # action = rand.randint(0, self.num_actions-1)
@@ -63,17 +77,19 @@ class QLearner(object):
         prevState = self.s
         prevAction = self.a
         newState = s_prime
+        self.count = self.count + 1
+        rand.seed(np.random.randint(50))
         # decide what action to take in the new state
         if rand.random() < self.rar: #Random exploration
-            # action = rand.randint(0, self.num_actions - 1)
-            action = (np.int(rand.random()*111)) % self.num_actions
+            action = rand.randint(0, self.num_actions - 1)
+            # action = (np.int(rand.random()*111)) % self.num_actions
         else: # Or choose the action best on Q table at current state
             possibleAction = self.Q[newState]
-            maxQVal = np.max(possibleAction)
+            maxQVal = max(possibleAction)
             allActions = np.where(possibleAction == maxQVal)
-            ind = (np.int(rand.random()*222)) % allActions[0].shape[0]
+            # ind = (np.int(rand.random()*222)) % allActions[0].shape[0]
             # action = rand.choice(allActions[0])
-            action = allActions[0][ind]
+            action = allActions[0][0]
         # prevQ = self.Q[prevState][prevAction]
  #        newQ = self.Q[newState][action]
         # update the Q based on new state and new action made from prev state
@@ -84,30 +100,29 @@ class QLearner(object):
         if self.dyna != 0:
             self.Tc[prevState][prevAction][newState] = self.Tc[prevState][prevAction][newState] + 1
             self.R[prevState][prevAction] = (1.0 - self.alpha) * self.R[prevState][prevAction] + self.alpha * r
-            self.rar = self.rar * self.radr * self.radr
             for i in range(0, self.num_states):            
-                self.T[prevState][action][i] = self.Tc[prevState][action][i] / sum(self.Tc[prevState][action][:])
+                self.T[prevState][prevAction][i] = self.Tc[prevState][prevAction][i] / sum(self.Tc[prevState][prevAction])
             for i in range(0, self.dyna):
                 # s = rand.randint(0,self.num_states-1)
-                s = np.int(rand.random()*333) % self.num_states
+                ss = np.int(rand.random()*333) % self.num_states
                 # a = rand.randint(0, self.num_actions-1)
-                a = np.int(rand.random()*444) % self.num_actions
+                aa = np.int(rand.random()*444) % self.num_actions
                 randValue = rand.random()
                 cumProb = 0.0
                 sp_temp = 0
                 #use cumulative probability to select the sp in hulacination (using random generated sp is not a good idea, it takes more time and steps to go to destination)
                 scaleCoef = 5
                 while cumProb <= randValue:
-                    cumProb += self.T[s][a][sp_temp]*scaleCoef
+                    cumProb += self.T[ss][aa][sp_temp]*scaleCoef
                     sp = sp_temp
                     sp_temp = sp_temp + 1
-                rr = self.R[s][a]
+                rr = self.R[ss][aa]
                 tempPossibleAction = self.Q[sp]
                 tempMaxQVal = max(tempPossibleAction)
                 allActions = np.where(tempPossibleAction == tempMaxQVal)
-                ind = (np.int(rand.random()*555)) % allActions[0].shape[0]
+                ind = (np.int(rand.random()*1234)) % allActions[0].shape[0]
                 newAction = allActions[0][ind]
-                self.Q[s][a] = (1.0 - self.alpha) * self.Q[s][a] + self.alpha * (rr + self.gamma * self.Q[sp][newAction])
+                self.Q[ss][aa] = (1.0 - self.alpha) * self.Q[ss][aa] + self.alpha * (rr + self.gamma * self.Q[sp][newAction])
         # ===========================================    
         
         # decay the rar, otherwise it will always try explore randomly with high possibility
